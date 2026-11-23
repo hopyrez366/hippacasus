@@ -1,0 +1,13 @@
+node_modules/
+*.tmp
+.hippocampus/raw/
+.hippocampus/recall/
+.hippocampus/checkpoints/
+.hippocampus/attachments/
+.hippocampus/hippocampus.json
+.hippocampus/wiki/index.db
+.hippocampus/errors.log
+.hippocampus/memory-audit.log
+.hippocampus/logs/
+.hippocampus/memory-audit.log.1
+.hippocampus/last-consolidation.txt
