@@ -21,6 +21,7 @@ function tmp(): string {
   return d
 }
 after(() => {
+  I.closeAllWikiDbs?.() // Windows: an open index.db handle blocks rm of the temp dir with EBUSY (POSIX unlinks open files fine)
   for (const t of tmps) fs.rmSync(t, { recursive: true, force: true })
 })
 

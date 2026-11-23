@@ -1182,6 +1182,11 @@ function closeWikiDb(wikiDir: string): void {
   wikiFtsCacheByDir.delete(wikiDir)
 }
 
+// Close EVERY open index DB. Test teardown on Windows: an open handle makes rm of the temp dir fail with EBUSY (POSIX happily unlinks open files, Windows does not).
+function closeAllWikiDbs(): void {
+  for (const dir of [...wikiDbs.keys()]) closeWikiDb(dir)
+}
+
 // --- FTS result cache (LRU per dir): repeated searches between index mutations are ~700x cheaper (bench, 10MB corpus).
 // Cleared on every mutation (rebuild/upsert) and db close, so a cached row can never outlive the index state that produced it.
 type WikiHit = { path: string; title: string; type: string; description: string; snip: string }
@@ -3962,6 +3967,7 @@ if (process.env.HIPPO_TEST === "1") {
     stampRecordedAt,
     normalizeDateBound,
     wikiUpsert,
+    closeAllWikiDbs, // test-only: release open handles so Windows can rm the temp dir (EBUSY otherwise)
     wikiList,
     wikiSearch,
     indexWikiPage,

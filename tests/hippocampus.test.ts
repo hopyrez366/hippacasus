@@ -1783,8 +1783,14 @@ describe("review round-2 items 1-5", () => {
       const f = I.sessionFilePath(wt, "sRB1")
       fs.unlinkSync(f)
       fs.symlinkSync("/nonexistent-hippo-target", f) // broken link: appendFile fails AND the rollback's stat fails too
-      // broken symlink: appendFile fails EACCES, the rollback's stat fails ENOENT (logged as e2)
-      await assert.rejects(log.writeUnits([mkU("u_rb2", "second")], {}), /EACCES/, "the original append failure must still propagate")
+      // broken symlink: open/append fails on the dangling target — errno is platform-dependent (Linux EACCES, macOS EROFS); the rollback's stat fails ENOENT everywhere (logged as e2)
+      let appendErr: unknown
+      try {
+        await log.writeUnits([mkU("u_rb2", "second")], {})
+      } catch (e) {
+        appendErr = e
+      }
+      assert.ok(appendErr instanceof Error && /^E[A-Z]+:/.test((appendErr as Error).message), `the original append failure must still propagate, got: ${String(appendErr)}`)
       const logText = readLogLine(wt)
       assert.match(logText, /ERROR \[raw-write\].*partial append rolled back/, `log was:\n${logText}`)
       assert.match(logText, /ERROR \[raw-write\].*Error: ENOENT/, "the failed rollback itself must be logged (was a silent debugLog)")
