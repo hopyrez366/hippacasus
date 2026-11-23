@@ -21,6 +21,9 @@ function rmrf(p: string): void {
   } catch {}
 }
 
+// POSIX-only failure injection (chmod 0o555, dangling symlinks): NTFS ignores permission bits and does not fail these writes → the error paths under test cannot be triggered on Windows. Covered by ubuntu+macos CI instead.
+const itPosix = process.platform === "win32" ? (it as any).skip : it
+
 // ---------- redaction ----------
 describe("redactSecrets", () => {
   it("masks token prefixes and quoted keys", () => {
@@ -1746,7 +1749,7 @@ describe("review round-2 items 1-5", () => {
   })
 
   // item 2 (core-memory): a failed HUMAN-block migration leaves core-memory.md in the old broken shape. Was debugLog(e).
-  it("item 2: a failed migration logs [core-memory] at error level and leaves the file untouched", async () => {
+  itPosix("item 2: a failed migration logs [core-memory] at error level and leaves the file untouched", async () => {
     const wt = freshRoot()
     try {
       const root = I.hippoRoot(wt)
@@ -1773,7 +1776,7 @@ describe("review round-2 items 1-5", () => {
   })
 
   // item 2 (raw-write): the rollback itself failed → the file may hold a PARTIAL unit = duplicate lines on retry. Was debugLog(e2).
-  it("item 2: a failed rollback logs [raw-write] at error level", async () => {
+  itPosix("item 2: a failed rollback logs [raw-write] at error level", async () => {
     const wt = freshRoot()
     try {
       await I.ensureInit(wt)
@@ -1801,7 +1804,7 @@ describe("review round-2 items 1-5", () => {
 
   // item 2 (attach): the full stack of a failed archive must land in THIS project's log at debug level.
   // Was debugLog(e) — without worktree it would follow currentWorktree (another project, or nowhere).
-  it("item 2: a failed attachment archive logs its stack into this project's own log", async () => {
+  itPosix("item 2: a failed attachment archive logs its stack into this project's own log", async () => {
     const wt = freshRoot()
     try {
       await I.ensureInit(wt)
